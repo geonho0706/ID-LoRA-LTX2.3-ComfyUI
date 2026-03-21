@@ -6,6 +6,10 @@ ComfyUI custom nodes for **ID-LoRA-2.3** inference — audio+video generation wi
 
 Two-stage output (max_resolution=1024, HQ mode, 242 frames @ 25fps):
 
+Input voice sample:
+[reference.mp3](https://github.com/user-attachments/files/26158470/reference.mp3)
+
+
 https://github.com/user-attachments/assets/b44879a9-ca1d-4846-bdb7-1142c0b1ccb7
 
 
