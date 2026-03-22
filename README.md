@@ -71,7 +71,7 @@ This downloads all required models from HuggingFace:
 | Model | HuggingFace repo | Size |
 |-------|-----------------|------|
 | LTX-2.3 base checkpoint | `Lightricks/LTX-2.3` | ~44 GB |
-| Gemma 3 12B text encoder | `google/gemma-3-12b-it-qat-q4_0-unquantized` | ~6 GB |
+| Gemma 3 12B text encoder | `google/gemma-3-12b-it-qat-q4_0-unquantized` | ~30 GB |
 | ID-LoRA CelebV-HQ weights | `AviadDahan/LTX-2.3-ID-LoRA-CelebVHQ-3K` | ~1.1 GB |
 | ID-LoRA TalkVid weights | `AviadDahan/LTX-2.3-ID-LoRA-TalkVid-3K` | ~1.1 GB |
 
