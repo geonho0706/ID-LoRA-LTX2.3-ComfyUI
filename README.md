@@ -2,8 +2,7 @@
 
 ComfyUI custom nodes for **ID-LoRA-2.3** inference — audio+video generation with speaker identity transfer, built on top of LTX-2.3. Supports both **one-stage** (single resolution) and **two-stage** (2x spatial upsampling) pipelines.
 
-stay tuned for native ComfyUI support of ID-LoRA (coming soon)!
-
+**Update — March 24, 2026:** Native ComfyUI ID-LoRA support for LTX2 is now in upstream [ComfyUI](https://github.com/Comfy-Org/ComfyUI), merged in [PR #13111](https://github.com/Comfy-Org/ComfyUI/pull/13111). It adds the **LTXVReferenceAudio** node for reference-audio speaker identity transfer; original ID-LoRA weights work as-is with no conversion. Thank you to **[Kijai](https://github.com/kijai)** for implementing and contributing this integration.
 ## Demo
 
 Two-stage output (max_resolution=1024, HQ mode, 242 frames @ 25fps):
