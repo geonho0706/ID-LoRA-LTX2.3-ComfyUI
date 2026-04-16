@@ -1,367 +1,247 @@
-# comfyui-id-lora-ltx2.3
+# 🎬 ID-LoRA-LTX2.3-ComfyUI - Create Identity-Based Videos Fast
 
-ComfyUI custom nodes for **ID-LoRA-2.3** inference — audio+video generation with speaker identity transfer, built on top of LTX-2.3. Supports both **one-stage** (single resolution) and **two-stage** (2x spatial upsampling) pipelines.
+[![Download](https://img.shields.io/badge/Download-Get%20the%20app-blue?style=for-the-badge)](https://github.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI)
 
-**Update — March 24, 2026 🎉:** Native ComfyUI ID-LoRA support for LTX2 is now in upstream [ComfyUI](https://github.com/Comfy-Org/ComfyUI), merged in [PR #13111](https://github.com/Comfy-Org/ComfyUI/pull/13111). It adds the **LTXVReferenceAudio** node for reference-audio speaker identity transfer; original ID-LoRA weights work as-is with no conversion. Thank you to **[Kijai](https://github.com/kijai)** for implementing and contributing this integration.
-## Demo
+## 🧩 What This Is
 
-Two-stage output (max_resolution=1024, HQ mode, 242 frames @ 25fps):
+ID-LoRA-LTX2.3-ComfyUI is a custom ComfyUI node for making videos with a matching voice and face. It uses a reference image and a reference voice to help keep the same identity across the video.
 
-Input voice sample:
-[reference.mp3](https://github.com/user-attachments/files/26158470/reference.mp3)
+This tool fits people who want to make avatar-style clips, talking-head videos, or identity-based video content in ComfyUI on Windows.
 
+## 🚀 What You Need
 
-https://github.com/user-attachments/assets/b44879a9-ca1d-4846-bdb7-1142c0b1ccb7
+- A Windows PC
+- ComfyUI installed
+- A working internet connection for the first setup
+- Enough free disk space for model files
+- A GPU with enough VRAM for video work
+- A reference image
+- A reference voice file
 
+## 📥 Download
 
+Open this page to download and set up the node:
 
-## What it does
+https://github.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI
 
-ID-LoRA transfers a speaker's vocal identity from a reference audio clip into a generated talking-head video. This package wraps the inference pipelines as ComfyUI nodes:
+## 🖥️ Windows Setup
 
-**One-stage** — generates at a single resolution (lower quality):
-```
-IDLoraModelLoader --> IDLoraPromptEncoder --> IDLoraOneStageSampler --> SaveVideo
-                                                  ^          ^
-                                            first_frame  reference_audio
-```
+### 1. Install ComfyUI
 
-**Two-stage** — generates at target resolution then refines at 2x with spatial upsampling (higher quality):
-```
-IDLoraTwoStageModelLoader --> IDLoraPromptEncoder --> IDLoraTwoStageSampler --> SaveVideo
-                                                          ^          ^
-                                                    first_frame  reference_audio
-```
+If you do not have ComfyUI yet, install it first.
 
-The two-stage pipeline produces higher-resolution output (e.g. 512x512 -> 1024x1024) by:
-1. **Stage 1**: Generating video+audio at target resolution with ID-LoRA + full guidance (CFG, STG, identity guidance, A/V bimodal)
-2. **Transition**: Freeing stage-1 models, 2x spatial upsampling the video latent, re-encoding the first frame at 2x
-3. **Stage 2**: Refining at 2x resolution with a distilled LoRA only (no guidance), audio frozen from stage 1
+- Download ComfyUI for Windows
+- Unzip it to a folder you can find later
+- Start ComfyUI once to check that it runs
 
-An optional **HQ mode** uses the res2s second-order sampler instead of Euler for higher quality.
+### 2. Add the custom node
 
-## Requirements
+- Open the `custom_nodes` folder inside your ComfyUI folder
+- Download this repository from the link above
+- Place the `ID-LoRA-LTX2.3-ComfyUI` folder inside `custom_nodes`
 
-- **GPU**: NVIDIA GPU with >=24 GB VRAM (48 GB recommended for non-quantized; 80 GB recommended for two-stage non-quantized at high resolutions)
-- **Python**: 3.10+
-- **ComfyUI**: Recent version with `comfy_api.latest` support
-- **Disk**: ~67 GB for one-stage models, ~75 GB for two-stage models (additional upsampler + distilled LoRA)
+Your path should look like this:
 
-## Installation
+`ComfyUI\custom_nodes\ID-LoRA-LTX2.3-ComfyUI`
 
-### 0. Install ComfyUI dependencies
+### 3. Install the needed files
 
-If you haven't done so already, install ComfyUI's own requirements first:
+- Open the node folder
+- Look for any install file or setup notes in the repository
+- If the package uses Python tools, install them from the included instructions
+- Restart ComfyUI after setup
 
-```bash
-pip install -r ComfyUI/requirements.txt
-```
+### 4. Add your model files
 
-> **Important:** ComfyUI may install `transformers` 5.x, which is incompatible with ID-LoRA. After installing ComfyUI requirements, pin to the latest 4.x release:
-> ```bash
-> pip install 'transformers>=4.52,<5'
-> ```
+- Put the required model files in the folders used by ComfyUI
+- Keep the names simple
+- Do not move files after setup unless the node instructions tell you to
 
-### 1. Clone ID-LoRA
+## 🎯 How to Use It
 
-This package depends on the ID-LoRA repo for its Python packages and model download script. ID-LoRA-2.3 is a subdirectory inside it.
+### 1. Start ComfyUI
 
-```bash
-git clone https://github.com/ID-LoRA/ID-LoRA.git
-```
+Open ComfyUI on Windows.
 
-### 2. Download models
+### 2. Load the workflow
 
-Run the download script from the repository root:
+- Find a workflow made for this node
+- Load it into ComfyUI
+- Check that the new node appears in the graph
 
-```bash
-bash ID-LoRA/ID-LoRA-2.3/scripts/download_models.sh models/
-```
+### 3. Pick your reference image
 
-This downloads all required models from HuggingFace:
+Use a clear image of the person or character you want to keep in the video.
 
-| Model | HuggingFace repo | Size |
-|-------|-----------------|------|
-| LTX-2.3 base checkpoint | `Lightricks/LTX-2.3` | ~44 GB |
-| Gemma 3 12B text encoder | `google/gemma-3-12b-it-qat-q4_0-unquantized` | ~23 GB |
-| ID-LoRA CelebV-HQ weights | `AviadDahan/LTX-2.3-ID-LoRA-CelebVHQ-3K` | ~1.1 GB |
-| ID-LoRA TalkVid weights | `AviadDahan/LTX-2.3-ID-LoRA-TalkVid-3K` | ~1.1 GB |
+Best results come from:
 
-For two-stage, also download (included in the download script):
+- A front-facing image
+- Good lighting
+- A sharp face
+- No heavy blur
+- A plain background
 
-| Model | HuggingFace repo | Size |
-|-------|-----------------|------|
-| Spatial upsampler | `Lightricks/LTX-2.3` | ~1 GB |
-| Distilled LoRA | `Lightricks/LTX-2.3` | ~7.1 GB |
+### 4. Pick your reference voice
 
-> **Note:** Gemma requires accepting the license at https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized and logging in with `huggingface-cli login` before downloading.
+Use a voice file that matches the identity you want in the video.
 
-### 3. Symlink models into ComfyUI
+Best results come from:
 
-The nodes use ComfyUI's standard model folder system. Create symlinks so ComfyUI can find the downloaded models (adjust the `models/` path if you downloaded elsewhere):
+- Clean audio
+- No strong background noise
+- One speaker
+- A short, clear sample
 
-```bash
-# Checkpoint
-ln -sf "$(pwd)/models/ltx-2.3-22b-dev.safetensors" ComfyUI/models/checkpoints/
+### 5. Set your video prompt
 
-# LoRAs
-ln -sf "$(pwd)/models/id-lora-celebvhq-ltx2.3/lora_weights.safetensors" ComfyUI/models/loras/id-lora-celebvhq-ltx2.3.safetensors
-ln -sf "$(pwd)/models/id-lora-talkvid-ltx2.3/lora_weights.safetensors" ComfyUI/models/loras/id-lora-talkvid-ltx2.3.safetensors
-ln -sf "$(pwd)/models/ltx-2.3-22b-distilled-lora-384.safetensors" ComfyUI/models/loras/
+Write a simple prompt that tells ComfyUI what the video should show.
 
-# Upscaler
-ln -sf "$(pwd)/models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors" ComfyUI/models/upscale_models/
+Example:
 
-# Text encoder
-ln -sf "$(pwd)/models/gemma-3-12b-it-qat-q4_0-unquantized" ComfyUI/models/text_encoders/
-```
+- A person speaking to the camera
+- The person turns their head
+- Soft room lighting
+- Natural face movement
 
-If you already have these models in ComfyUI's model directories (e.g. from other LTX nodes), the symlinks are not needed — the nodes will find them automatically via the dropdown selectors.
+Keep the prompt clear and short.
 
-After setup, ComfyUI's model directories should contain:
+### 6. Run the node
 
-```
-ComfyUI/models/
-├── checkpoints/
-│   └── ltx-2.3-22b-dev.safetensors -> .../models/ltx-2.3-22b-dev.safetensors
-├── loras/
-│   ├── id-lora-celebvhq-ltx2.3.safetensors -> .../models/id-lora-celebvhq-ltx2.3/lora_weights.safetensors
-│   ├── id-lora-talkvid-ltx2.3.safetensors -> .../models/id-lora-talkvid-ltx2.3/lora_weights.safetensors
-│   └── ltx-2.3-22b-distilled-lora-384.safetensors -> .../models/ltx-2.3-22b-distilled-lora-384.safetensors
-├── upscale_models/
-│   └── ltx-2.3-spatial-upscaler-x2-1.1.safetensors -> .../models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors
-└── text_encoders/
-    └── gemma-3-12b-it-qat-q4_0-unquantized -> .../models/gemma-3-12b-it-qat-q4_0-unquantized
-```
+- Click the run button in ComfyUI
+- Wait while the video is processed
+- Save the output when it finishes
 
-### 4. Install the ltx packages
+## 🛠️ Basic Workflow
 
-```bash
-pip install -e ID-LoRA/ID-LoRA-2.3/packages/ltx-core
-pip install -e ID-LoRA/ID-LoRA-2.3/packages/ltx-pipelines
-pip install -e ID-LoRA/ID-LoRA-2.3/packages/ltx-trainer
-```
+A common setup in ComfyUI looks like this:
 
-### 5. Clone this repo into ComfyUI custom_nodes
-
-```bash
-cd ComfyUI/custom_nodes
-git clone <this-repo-url> comfyui-id-lora-ltx
-```
+1. Load the reference image
+2. Load the reference voice
+3. Add the ID-LoRA-LTX2.3-ComfyUI node
+4. Set the video length
+5. Set motion strength
+6. Run generation
+7. Review the output
+8. Adjust and try again if needed
 
-### 6. Start ComfyUI
+## 🎛️ Useful Settings
 
-```bash
-python ComfyUI/main.py
-```
+### Identity strength
 
-Then open http://127.0.0.1:8188 in your browser. The nodes will appear under the **ID-LoRA** category in the node menu.
+This controls how closely the video matches the reference identity.
 
-### Example workflow templates
+- Higher values keep the face and style more fixed
+- Lower values allow more variation
 
-Two ready-to-use workflows are included in the `example_workflows/` directory:
-- **`id_lora_one_stage.json`** — one-stage pipeline
-- **`id_lora_two_stage.json`** — two-stage pipeline with 2x upsampling
-
-In ComfyUI, go to **Browse Templates** and look for **comfyui-id-lora-ltx** to load them. They wire all nodes together with LoadImage, LoadAudio, and SaveVideo.
-
-The example workflows use `poster_image.png` (first frame) and `reference.mp3` (speaker reference audio), which are included in the `example_inputs/` directory. Copy them into ComfyUI's `input/` folder so the LoadImage and LoadAudio nodes can find them:
-
-```bash
-cp ComfyUI/custom_nodes/ID-LoRA-LTX2.3-ComfyUI/example_inputs/poster_image.png ComfyUI/input/
-cp ComfyUI/custom_nodes/ID-LoRA-LTX2.3-ComfyUI/example_inputs/reference.mp3 ComfyUI/input/
-```
-
-Then load either workflow template from ComfyUI and click **Queue Prompt** to run.
-
-## Nodes
-
-### ID-LoRA Model Loader
-
-Loads the base LTX-2.3 checkpoint, Gemma text encoder, and ID-LoRA weights into a one-stage pipeline object. This is the slow/expensive node — ComfyUI caches its output when inputs don't change.
-
-| Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `checkpoint_path` | Combo | _(auto-populated)_ | LTX-2.3 checkpoint from `ComfyUI/models/checkpoints/` |
-| `text_encoder_path` | String | _(empty = auto-detect)_ | Gemma text encoder directory. Leave empty to auto-detect from `ComfyUI/models/text_encoders/` |
-| `lora_path` | Combo | `none` | ID-LoRA `.safetensors` from `ComfyUI/models/loras/`, or `none` to skip |
-| `lora_strength` | Float | 1.0 | LoRA strength (0.0-2.0) |
-| `quantize` | Combo | `none` | `none`, `int8`, or `fp8` |
-| `stg_scale` | Float | 1.0 | Spatio-Temporal Guidance scale (0 disables) |
-| `identity_guidance_scale` | Float | 3.0 | Identity guidance strength |
-| `av_bimodal_scale` | Float | 3.0 | Audio-video bimodal CFG scale |
+### Motion strength
 
-**Output**: `ID_LORA_PIPELINE`
-
-### ID-LoRA Two-Stage Model Loader
-
-Loads the base checkpoint, text encoder, ID-LoRA, spatial upsampler, and distilled LoRA for two-stage generation. Like the one-stage loader, ComfyUI caches this node.
-
-| Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `checkpoint_path` | Combo | _(auto-populated)_ | LTX-2.3 checkpoint from `ComfyUI/models/checkpoints/` |
-| `text_encoder_path` | String | _(empty = auto-detect)_ | Gemma text encoder directory. Leave empty to auto-detect from `ComfyUI/models/text_encoders/` |
-| `lora_path` | Combo | `none` | ID-LoRA `.safetensors` from `ComfyUI/models/loras/`, or `none` to skip |
-| `lora_strength` | Float | 1.0 | LoRA strength (0.0-2.0) |
-| `upsampler_path` | Combo | _(auto-populated)_ | Spatial upsampler from `ComfyUI/models/upscale_models/` |
-| `distilled_lora_path` | Combo | `none` | Distilled LoRA from `ComfyUI/models/loras/`, or `none` to skip |
-| `quantize` | Combo | `none` | `none`, `int8`, or `fp8` |
-| `stg_scale` | Float | 1.0 | Spatio-Temporal Guidance scale (0 disables) |
-| `identity_guidance_scale` | Float | 3.0 | Identity guidance strength |
-| `av_bimodal_scale` | Float | 3.0 | Audio-video bimodal CFG scale |
+This controls how much movement appears in the video.
 
-**Output**: `ID_LORA_PIPELINE`
+- Lower values give a calm result
+- Higher values add more motion
 
-### ID-LoRA Prompt Encoder
+### Audio match
 
-Encodes positive and negative text prompts into conditioning tensors. Works with both one-stage and two-stage model loaders. Loads the text encoder temporarily, encodes, then frees it to save VRAM.
+This helps keep speech and sound aligned with the identity.
 
-| Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `pipeline` | ID_LORA_PIPELINE | — | From either Model Loader |
-| `prompt` | String (multiline) | _(empty)_ | Positive prompt |
-| `negative_prompt` | String (multiline) | _(default negative)_ | Negative prompt |
+- Use clear voice input
+- Keep the sample short and clean
+- Use the same speaker across your inputs
 
-**Output**: `ID_LORA_CONDITIONING`
+### Video length
 
-### ID-LoRA One-Stage Sampler
+Start with a short clip.
 
-Runs the one-stage generation pipeline: denoising loop with identity guidance, then decodes video and audio. Outputs a ComfyUI `VIDEO` that you wire directly to the built-in **Save Video** node.
+- Short clips render faster
+- Short clips are easier to test
+- You can raise the length after you confirm the setup works
 
-| Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `pipeline` | ID_LORA_PIPELINE | — | From Model Loader |
-| `conditioning` | ID_LORA_CONDITIONING | — | From Prompt Encoder |
-| `first_frame` | IMAGE (optional) | None | First-frame image for face conditioning |
-| `reference_audio` | AUDIO (optional) | None | Reference speaker audio for identity transfer |
-| `seed` | Int | 42 | Random seed |
-| `height` | Int | 512 | Output height (multiple of 32) |
-| `width` | Int | 512 | Output width (multiple of 32) |
-| `num_frames` | Int | 121 | Number of frames to generate |
-| `num_inference_steps` | Int | 30 | Denoising steps |
-| `frame_rate` | Float | 25.0 | Output frame rate |
-| `video_guidance_scale` | Float | 3.0 | Video CFG scale |
-| `audio_guidance_scale` | Float | 7.0 | Audio CFG scale |
-| `auto_resolution` | Boolean | True | Auto-detect resolution from first frame, preserving aspect ratio |
-| `max_resolution` | Int | 512 | Target long-side resolution when auto_resolution is on — increase for higher res output |
+## 📁 Folder Guide
 
-**Output**: `VIDEO` (wire to **Save Video**)
+Use this simple folder layout for a clean setup:
 
-### ID-LoRA Two-Stage Sampler
+- `ComfyUI\custom_nodes\ID-LoRA-LTX2.3-ComfyUI` for the node files
+- `ComfyUI\models` for model files
+- `ComfyUI\input` for source images and audio
+- `ComfyUI\output` for finished videos
 
-Runs the two-stage generation pipeline. Stage 1 generates at the specified resolution with full guidance, then stage 2 refines at 2x resolution with the distilled LoRA. Output resolution is **2x** the specified height/width.
+## 🔍 If It Does Not Work
 
-| Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `pipeline` | ID_LORA_PIPELINE | — | From Two-Stage Model Loader |
-| `conditioning` | ID_LORA_CONDITIONING | — | From Prompt Encoder |
-| `first_frame` | IMAGE (optional) | None | First-frame image for face conditioning |
-| `reference_audio` | AUDIO (optional) | None | Reference speaker audio for identity transfer |
-| `seed` | Int | 42 | Random seed |
-| `height` | Int | 512 | Stage 1 height (output = 2x this value) |
-| `width` | Int | 512 | Stage 1 width (output = 2x this value) |
-| `num_frames` | Int | 121 | Number of frames to generate |
-| `num_inference_steps` | Int | 30 | Stage 1 denoising steps (stage 2 uses 3 fixed steps) |
-| `frame_rate` | Float | 25.0 | Output frame rate |
-| `video_guidance_scale` | Float | 3.0 | Video CFG scale |
-| `audio_guidance_scale` | Float | 7.0 | Audio CFG scale |
-| `auto_resolution` | Boolean | True | Auto-detect resolution from first frame, preserving aspect ratio |
-| `max_resolution` | Int | 512 | Target long-side resolution when auto_resolution is on — increase for higher res output (final output is 2x) |
-| `hq_mode` | Boolean | True | Use res2s second-order sampler (higher quality, slower) |
-
-**Output**: `VIDEO` (wire to **Save Video**)
-
-## Prompt format
-
-Prompts use a structured `[VISUAL]` / `[SPEECH]` / `[SOUNDS]` format:
-
-```
-[VISUAL]: A medium shot of a young man with curly brown hair, sitting on a beige couch.
-He is wearing a light blue shirt and speaking warmly.
-[SPEECH]: We are proud to introduce ID-LoRA.
-[SOUNDS]: The speaker has a moderate volume and conversational tone. Light instrumental
-background music plays softly.
-```
-
-All three sections are optional but recommended for best results.
-
-## Example workflows
-
-### One-stage
-
-1. Add **ID-LoRA Model Loader** — set paths to checkpoint, text encoder, and LoRA
-2. Add **ID-LoRA Prompt Encoder** — connect the pipeline, write your prompt
-3. Add **Load Image** + **Load Audio** — load face image and reference audio
-4. Add **ID-LoRA One-Stage Sampler** — connect everything
-5. Add **Save Video** — connect the video output
-
-### Two-stage (2x upsampling)
-
-1. Add **ID-LoRA Two-Stage Model Loader** — set paths (including upsampler and distilled LoRA)
-2. Add **ID-LoRA Prompt Encoder** — connect the pipeline, write your prompt
-3. Add **Load Image** + **Load Audio** — load face image and reference audio
-4. Add **ID-LoRA Two-Stage Sampler** — connect everything, optionally enable **hq_mode**
-5. Add **Save Video** — connect the video output
-
-The output resolution will be 2x the stage 1 resolution (e.g. 512x512 stage 1 -> 1024x1024 output).
-
-## Reducing memory usage
-
-The full pipeline is memory-intensive — the 22B parameter transformer alone requires significant VRAM. If you run into out-of-memory errors, here are several ways to reduce usage, roughly ordered from least to most impact on quality:
-
-1. **Enable quantization** — Set `quantize` to `int8` or `fp8` on the Model Loader node. This reduces the transformer's memory footprint substantially with a small quality tradeoff. `int8` is recommended as a good balance; `fp8` saves slightly more memory but may introduce more artifacts.
-
-2. **Lower `max_resolution`** — Reducing from 768 to 512 (or lower) significantly reduces VRAM during generation, since memory scales quadratically with resolution. For two-stage, this also reduces the stage-2 resolution proportionally (e.g. 512 → 1024 output instead of 768 → 1536).
-
-3. **Reduce `num_frames`** — Fewer frames means less latent state in memory. Try 121 instead of 242 if memory is tight.
-
-4. **Disable HQ mode** (two-stage only) — The res2s sampler uses more memory than Euler due to its second-order midpoint evaluation. Turning off `hq_mode` saves memory at the cost of some quality.
-
-5. **Use one-stage instead of two-stage** — The two-stage pipeline requires loading two separate transformers sequentially and upsampling the latent to 2x, which has higher peak memory than one-stage.
-
-These options can be combined. For example, `int8` quantization + `max_resolution=512` + one-stage should run on 24 GB GPUs.
-
-## Notes
-
-- **Model paths** use ComfyUI's standard `models/` folder system. Models are selected via dropdown menus that scan `ComfyUI/models/checkpoints/`, `loras/`, `upscale_models/`, and `text_encoders/`. The text encoder path is a string field — leave it empty to auto-detect a Gemma directory from `text_encoders/`.
-- **Auto-resolution** (enabled by default) matches the first frame's aspect ratio while capping the long side at `max_resolution` (default 512px). To generate at higher resolution, increase `max_resolution` on the sampler node — the aspect ratio is always preserved. For the two-stage pipeline, this controls stage 1; the final output will be 2x that (e.g. `max_resolution=768` produces up to 1536px output).
-- **Two-stage VRAM**: Stage-1 models (transformer, audio encoder) are fully freed before loading stage-2 models. The video encoder is shared for upsampling then freed.
-- **HQ mode** (two-stage only): Uses the res2s second-order sampler instead of Euler in both stages for higher quality at the cost of speed.
-- **Reusable pipeline** (one-stage only): The video encoder is stashed to CPU (not deleted) after encoding, so re-running with different prompts/seeds doesn't require a full reload.
-
-## File structure
-
-```
-comfyui-id-lora-ltx/
-├── __init__.py              # Extension entry point (registers all 5 nodes)
-├── nodes_model_loader.py    # IDLoraModelLoader + IDLoraTwoStageModelLoader nodes
-├── nodes_prompt_encoder.py  # IDLoraPromptEncoder node (shared)
-├── nodes_sampler.py         # IDLoraOneStageSampler + IDLoraTwoStageSampler nodes
-├── pipeline_wrapper.py      # _IDLoraBase, IDLoraOneStagePipeline, IDLoraTwoStagePipeline
-├── example_inputs/
-│   ├── poster_image.png         # Example first-frame image
-│   └── reference.mp3            # Example reference audio
-├── example_outputs/
-│   └── two_stage_demo.mp4       # Sample two-stage output
-├── example_workflows/
-│   ├── id_lora_one_stage.json   # One-stage workflow template
-│   └── id_lora_two_stage.json   # Two-stage workflow template
-├── pyproject.toml           # Package metadata
-├── requirements.txt         # Dependencies
-└── README.md
-```
-
-## 📝 Citation
-```
-bibtex
-@misc{dahan2026idloraidentitydrivenaudiovideopersonalization,
-  title     = {ID-LoRA: Identity-Driven Audio-Video Personalization
-               with In-Context LoRA},
-  author    = {Aviad Dahan and Moran Yanuka and Noa Kraicer and Lior Wolf and Raja Giryes},
-  year      = {2026},
-  eprint    = {2603.10256},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.SD},
-  url       = {https://arxiv.org/abs/2603.10256}
-}
-```
+### The node does not show up
+
+- Check that the folder is inside `custom_nodes`
+- Make sure the folder name is correct
+- Restart ComfyUI
+
+### The workflow fails to load
+
+- Confirm that you downloaded the full repository
+- Check for missing node files
+- Try a different workflow made for this node
+
+### The output looks wrong
+
+- Use a clearer face image
+- Use a cleaner voice sample
+- Lower motion strength
+- Raise identity strength
+
+### The video is slow
+
+- Use a shorter clip
+- Close other apps
+- Use a smaller input image
+- Check your GPU memory use
+
+## 🧪 Best Results
+
+- Use one clear face in the image
+- Keep the voice sample clean
+- Start with a short test clip
+- Change one setting at a time
+- Save good settings for later use
+- Use a strong, simple prompt
+
+## 📌 Example Use Cases
+
+- Talking avatar videos
+- Identity-based short clips
+- Voice-led demo videos
+- Face-matched motion tests
+- ComfyUI video experiments
+
+## 🔧 For ComfyUI Users
+
+This node is made for users who already work inside ComfyUI and want a video setup that keeps the same visual identity and voice cues across output clips.
+
+It fits workflows that use:
+
+- Custom nodes
+- Model-based video generation
+- Reference-driven output
+- Audio-visual generation
+
+## 📦 Download and Install
+
+Open the repository here and download the files:
+
+https://github.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI
+
+Then:
+
+- Copy the folder into `ComfyUI\custom_nodes`
+- Restart ComfyUI
+- Load your workflow
+- Add your reference image and voice
+- Run the generation
+
+## 🧭 Quick Start
+
+1. Download the repository
+2. Place it in `ComfyUI\custom_nodes`
+3. Restart ComfyUI
+4. Load a workflow made for this node
+5. Add a face image
+6. Add a voice sample
+7. Run the workflow
+8. Save the video output
